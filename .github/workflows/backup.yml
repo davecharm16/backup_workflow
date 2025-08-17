@@ -11,6 +11,7 @@ on:
 jobs:
   backup:
     runs-on: ubuntu-latest
+    environment: production  # Use the environment where your secrets are stored
     
     steps:
       - name: Checkout code
