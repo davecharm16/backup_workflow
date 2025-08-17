@@ -1,0 +1,66 @@
+name: Automated Database Backup
+
+on:
+  schedule:
+    # Run daily at 7:40 PM Asia/Manila (11:40 AM UTC)
+    - cron: '40 11 * * *'
+  workflow_dispatch: # Allow manual triggering
+  push:
+    branches: [ main ] # Trigger on push to main branch
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build project
+        run: npm run build
+        
+      - name: Run backup
+        env:
+          # Database
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_ENV: production
+          
+          # Google Drive OAuth
+          OATH_CLIENT_ID: ${{ secrets.OATH_CLIENT_ID }}
+          OATH_CLIENT_SECRET: ${{ secrets.OATH_CLIENT_SECRET }}
+          GOOGLE_DRIVE_PARENT_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_PARENT_FOLDER_ID }}
+          
+          # Google Drive Service Account (fallback)
+          GOOGLE_DRIVE_CLIENT_EMAIL: ${{ secrets.GOOGLE_DRIVE_CLIENT_EMAIL }}
+          GOOGLE_DRIVE_PRIVATE_KEY: ${{ secrets.GOOGLE_DRIVE_PRIVATE_KEY }}
+          
+          # Email notifications
+          EMAIL_SERVICE: ${{ secrets.EMAIL_SERVICE }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          
+          # Backup settings
+          BACKUP_COMPRESSION: ${{ secrets.BACKUP_COMPRESSION }}
+          BACKUP_RETENTION_DAYS: ${{ secrets.BACKUP_RETENTION_DAYS }}
+          BACKUP_TIMEZONE: ${{ secrets.BACKUP_TIMEZONE }}
+          BACKUP_FORMATS: ${{ secrets.BACKUP_FORMATS }}
+        run: node dist/index.js
+        
+      - name: Upload backup artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-files-${{ github.run_number }}
+          path: backup-files/
+          retention-days: 7
