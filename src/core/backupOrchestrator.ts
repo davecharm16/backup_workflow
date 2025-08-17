@@ -255,6 +255,11 @@ export class BackupOrchestrator {
     
     for (const format of config.formats) {
       try {
+        // Validate format is not empty
+        if (!format || format.trim() === '') {
+          throw new Error(`Empty format detected. Check BACKUP_FORMATS environment variable.`);
+        }
+        
         console.log(`📄 Exporting ${format.toUpperCase()} format...`);
         
         let content: string | Buffer;
@@ -294,7 +299,7 @@ export class BackupOrchestrator {
             });
             break;
           default:
-            throw new Error(`Unsupported format: ${format}`);
+            throw new Error(`Unsupported format: "${format}". Supported formats: sql, json, xlsx`);
         }
         
         // Create backup file (Excel files should never be compressed)
@@ -459,7 +464,7 @@ export class BackupOrchestrator {
       [process.env.EMAIL_USER].filter(Boolean) as string[];
 
     return {
-      formats: (process.env.BACKUP_FORMATS?.split(',') as ('sql' | 'json' | 'xlsx')[]) || ['sql', 'json'],
+      formats: (process.env.BACKUP_FORMATS?.trim().split(',').filter(f => f.trim()) as ('sql' | 'json' | 'xlsx')[]) || ['sql', 'json', 'xlsx'],
       compression: process.env.BACKUP_COMPRESSION !== 'false',
       notifications: {
         sendOnSuccess: process.env.NOTIFICATION_ON_SUCCESS !== 'false',
