@@ -2,8 +2,8 @@ name: Automated Database Backup
 
 on:
   schedule:
-    # Run daily at 7:55 PM Asia/Manila (11:55 AM UTC)
-    - cron: '55 11 * * *'
+    # Run daily at 11:15 PM Asia/Manila (15:55 UTC)
+    - cron: '15 15 * * *'
   workflow_dispatch: # Allow manual triggering
   push:
     branches: [ main ] # Trigger on push to main branch
