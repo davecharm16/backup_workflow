@@ -4,19 +4,33 @@ require('dotenv').config();
 
 async function generateNewTokens(authCode) {
   console.log('🔐 Generating New OAuth Tokens...\n');
-  
-  if (!authCode) {
-    console.log('❌ No authorization code provided');
-    console.log('Usage: node generate-new-tokens.js "YOUR_AUTH_CODE"');
-    console.log('\nFirst, visit the authorization URL and get your code.');
-    return;
-  }
-  
+
   const clientId = process.env.OATH_CLIENT_ID;
   const clientSecret = process.env.OATH_CLIENT_SECRET;
-  
+
   if (!clientId || !clientSecret) {
     console.log('❌ OAuth credentials not found in environment variables');
+    return;
+  }
+
+  if (!authCode) {
+    // Generate and display the authorization URL
+    const oAuth2Client = new google.auth.OAuth2(
+      clientId,
+      clientSecret,
+      'urn:ietf:wg:oauth:2.0:oob'
+    );
+
+    const authUrl = oAuth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['https://www.googleapis.com/auth/drive.file'],
+      prompt: 'consent'
+    });
+
+    console.log('❌ No authorization code provided');
+    console.log('Usage: node generate-new-tokens.js "YOUR_AUTH_CODE"');
+    console.log('\n📋 Visit this URL to get your authorization code:');
+    console.log(authUrl);
     return;
   }
   
